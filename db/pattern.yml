@@ -1,0 +1,111 @@
+attacks:
+  - name: amp_dns_rrsig_fragmented
+    protocol: DNS
+    layers:
+      - DNSRRSIG
+    conditions:
+      - frag: true
+
+  - name: amp_tcp_reflection_synack
+    protocol: TCP
+    conditions:
+      - flags: "SYN-ACK"
+
+  - name: amp_tcp_syn_optionallyack_optionallysa
+    protocol: TCP
+    conditions:
+      - flags: SYN
+      - options:
+          - ACK
+          - SA
+
+  - name: amp_udp_bacnet_iot_37810
+    protocol: UDP
+    conditions:
+      - dport: 37810
+
+  - name: amp_udp_dnsany
+    protocol: UDP
+    conditions:
+      - dport: 53
+
+  - name: amp_udp_iot_port37810_json
+    protocol: UDP
+    conditions:
+      - dport: 37810
+      - payload: "JSON"
+
+  - name: amp_udp_isakmp
+    protocol: UDP
+    conditions:
+      - dport: 500
+
+  - name: amp_udp_manyprotocols
+    protocol: UDP
+    conditions: []
+
+  - name: amp_udp_memcached_ntp_cldap
+    protocol: UDP
+    conditions:
+      - dport:
+          - 11211
+          - 123
+          - 389
+
+  - name: amp_udp_snmp_src161
+    protocol: UDP
+    conditions:
+      - sport: 161
+
+  - name: amp_udp_ubnt_src10001
+    protocol: UDP
+    conditions:
+      - sport: 10001
+
+  - name: pkt_icmp_largeempty
+    protocol: ICMP
+    layers:
+      - ICMP
+    conditions:
+      - payload_size: 0
+
+#  - name: pkt_ipv4_randomprotofield
+#    protocol: IPv4
+#    conditions:
+#      - random_proto_field: true
+
+  - name: pkt_tcp_dominate_syn_ecn_cwr
+    protocol: TCP
+    conditions:
+      - flags: SYN
+      - ecn: true
+      - cwr: true
+
+  - name: pkt_tcp_synflood_spoofed
+    protocol: TCP
+    conditions:
+      - flags: SYN
+      - spoofed: true
+
+  - name: pkt_udp_fragmented
+    protocol: UDP
+    conditions:
+      - fragmented: true
+
+  - name: pkt_udp_null
+    protocol: UDP
+    conditions:
+      - payload_size: 0
+
+  - name: pkt_udp_rdm_fixedlength
+    protocol: UDP
+    conditions:
+      - fixed_length_payload: true
+
+  - name: SYN_flood
+    description: Detect SYN flood attacks
+    protocol: TCP
+    conditions:
+      - flags: S
+    threshold: 100
+

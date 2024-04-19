@@ -1,0 +1,94 @@
+attacks:
+  - name: "TCP SYN Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          SYN: true
+          ACK: false
+          FIN: false
+          RST: false
+          PSH: false
+          URG: false
+
+  - name: "TCP Connect Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - SYN: true
+          - ACK: true
+
+  - name: "TCP ACK Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - ACK: true
+          - SYN: false
+          - FIN: false
+          - RST: false
+          - PSH: false
+          - URG: false
+
+  - name: "TCP Window Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - ACK: true
+          - WINDOW: true
+
+  - name: "TCP Maimon Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - ACK: true
+          - PUSH: true
+          - URG: true
+
+  - name: "TCP Null Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - SYN: false
+          - ACK: false
+          - FIN: false
+          - RST: false
+          - PSH: false
+          - URG: false
+
+  - name: "TCP FIN Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - FIN: true
+          - ACK: false
+
+  - name: "TCP Xmas Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - FIN: true
+          - URG: true
+          - PSH: true
+
+  - name: "Idle Scan Detection"
+    protocol: "TCP"
+    conditions:
+      - flags:
+          - SYN: true
+          - ACK: false
+
+  - name: "SCTP INIT Scan Detection"
+    protocol: "SCTP"
+    conditions:
+      - flags:
+          - INIT: true
+
+  - name: "SCTP COOKIE-ECHO Scan Detection"
+    protocol: "SCTP"
+    conditions:
+      - flags:
+          - COOKIE-ECHO: true
+
+  - name: "FTP Bounce Scan Detection"
+    protocol: "FTP"
+    conditions:
+      - bounce_scan: true
