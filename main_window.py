@@ -204,14 +204,34 @@ class MainWindow(QMainWindow):
         if self.dark_mode:
             # Dark Mode
             self.setStyleSheet("""
-                background-color: #222;
-                color: #fff;
-            """)
-            self.tableWidget.setStyleSheet("background-color: #fff; color: #000;")
-            self.box_widget.setStyleSheet("background-color: #fff")
+                        QMainWindow {
+                            background-color: #222;
+                            color: #fff;
+                        }
+                        QTableWidget {
+                            background-color: #fff;
+                            color: #000;
+                        }
+                        QTextEdit {
+                            background-color: #333;
+                            color: #fff;
+                        }
+                        QMenu {
+                            background-color: #333;
+                            color: #fff;
+                            selection-background-color: #555;  # Lighter gray for the highlight
+                            selection-color: #fff;
+                        }
+                        QAction {
+                            selection-background-color: #555;  # Lighter gray for the highlight
+                        }
+                    """)
         else:
+            # Reset to default styles in light mode
             self.setStyleSheet("")
             self.tableWidget.setStyleSheet("")
+            # Resetting the box_widget style to default
+            self.box_widget.setStyleSheet("")
 
     def select_entire_row(self, row, col):
         self.tableWidget.selectRow(row)
@@ -260,7 +280,7 @@ class MainWindow(QMainWindow):
 
     def os_detection_action(self):
         if not self.packets:
-            QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
+            QMessageBox.warning(self, "No Patterns File Selected", "Please select a patterns file.")
             return
 
         reply = QMessageBox.question(self, "Save Log?", "Do you want to save the log?",
@@ -298,7 +318,7 @@ class MainWindow(QMainWindow):
     def threat_intelligence_action(self):
         # Check if there are packets loaded
         if not self.packets:
-            self.box_widget.append("No PCAP Loaded: Load a PCAP file first.")
+            QMessageBox.warning(self, "No Patterns File Selected", "Please select a patterns file.")
             return
 
         # Create a progress dialog
