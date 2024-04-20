@@ -11,12 +11,13 @@ import logging
 from concurrent.futures import ThreadPoolExecutor
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QTableWidget, QVBoxLayout, \
-    QWidget, QHBoxLayout, QTextEdit, QAction, QHeaderView, QMessageBox, QDialog, QFormLayout, QLineEdit, QPushButton
+    QWidget, QHBoxLayout, QTextEdit, QAction, QHeaderView, QMessageBox, QDialog, QFormLayout, QLineEdit, QPushButton, QProgressDialog
 from PyQt5.QtGui import QColor
 from scapy.all import *
 from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import TCP, IP
 from scapy.layers.inet6 import IPv6
+from API_request import *
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -55,6 +56,9 @@ class MainWindow(QMainWindow):
         self.fuzzy_detection_action = self.create_action("Fuzzy Detection", self.fuzzy_detection_action)
         analyze_menu.addAction(self.fuzzy_detection_action)
 
+        threat_intel_action = self.create_action("Threat Intelligence", self.threat_intelligence_action)
+        analyze_menu.addAction(threat_intel_action)
+
         main_widget = QWidget()
         main_layout = QVBoxLayout()
         main_widget.setLayout(main_layout)
@@ -65,6 +69,7 @@ class MainWindow(QMainWindow):
 
         self.box_widget = QTextEdit()
         main_layout.addWidget(self.box_widget)
+        self.box_widget.setReadOnly(True)
 
         self.packets = []
         self.capturing = False
@@ -287,3 +292,90 @@ class MainWindow(QMainWindow):
 
         # Display the result in the box widget
         self.box_widget.append(result)
+
+    def threat_intelligence_action(self):
+        # Check if there are packets loaded
+        if not self.packets:
+            self.box_widget.append("No PCAP Loaded: Load a PCAP file first.")
+            return
+
+        # Create a progress dialog
+        progress_dialog = QProgressDialog("Threat Intelligence is running, please wait...", "Cancel", 0, 0, self)
+        progress_dialog.setWindowModality(Qt.WindowModal)
+        progress_dialog.show()
+
+        # Track malicious IPs and domains
+        malicious_ips = set()
+        malicious_domains = set()
+
+        # Track indices for coloring rows in the table widget
+        malicious_ip_indices = []
+        malicious_domain_indices = []
+
+        # Iterate through loaded packets
+        for i, packet in enumerate(self.packets):
+            # Check if the progress dialog was canceled
+            if progress_dialog.wasCanceled():
+                progress_dialog.close()
+                return
+
+            if IP in packet:
+                src_ip = packet[IP].src
+                dst_ip = packet[IP].dst
+
+                # Check source IP
+                if not is_private_ip(src_ip):
+                    self.box_widget.append(f"Checking VirusTotal for source IP: {src_ip}")
+                    src_result = check_ip(ip=src_ip)
+                    if src_result and src_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
+                        self.box_widget.append(f"Malicious IP Detected: {src_ip}")
+                        malicious_ips.add(src_ip)
+                        malicious_ip_indices.append(i)
+
+                # Check destination IP
+                if not is_private_ip(dst_ip):
+                    self.box_widget.append(f"Checking VirusTotal for destination IP: {dst_ip}")
+                    dst_result = check_ip(ip=dst_ip)
+                    if dst_result and dst_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
+                        self.box_widget.append(f"Malicious IP Detected: {dst_ip}")
+                        malicious_ips.add(dst_ip)
+                        malicious_ip_indices.append(i)
+
+            # Handle DNS packets
+            if DNS in packet:
+                # Extract domain and check with VirusTotal
+                domain = packet[DNSQR].qname.decode('utf-8')
+                self.box_widget.append(f"Domain: {domain}")
+
+                domain_result = check_domains(domain=domain)
+                if domain_result:
+                    if domain_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
+                        self.box_widget.append(f"Suspicious/Malicious Domain Detected: {domain}")
+                        malicious_domains.add(domain)
+                        malicious_domain_indices.append(i)
+                    else:
+                        self.box_widget.append(f"Non-malicious Domain: {domain}")
+
+            # Update progress dialog
+            progress_dialog.setValue(i + 1)  # Update progress bar position
+            QApplication.processEvents()  # Keep the application responsive during the loop
+
+        # Close the progress dialog once the operation is completed
+        progress_dialog.close()
+
+        # Color rows in the table widget for malicious IPs and domains
+        for index in malicious_ip_indices + malicious_domain_indices:
+            for col in range(self.tableWidget.columnCount()):
+                item = self.tableWidget.item(index, col)
+                if item:
+                    item.setBackground(QColor(255, 0, 0))  # Red color for malicious activity
+
+        # Display final message box with analysis results
+        if malicious_ips or malicious_domains:
+            result_text = f"Malicious IPs Detected: {', '.join(malicious_ips)}\n" \
+                          f"Malicious Domains Detected: {', '.join(malicious_domains)}"
+            QMessageBox.information(self, "Threat Intelligence Analysis", result_text)
+        else:
+            QMessageBox.information(self, "Threat Intelligence Analysis", "No malicious IPs or domains detected.")
+
+
