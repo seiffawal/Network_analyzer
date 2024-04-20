@@ -387,5 +387,3 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Threat Intelligence Analysis", result_text)
         else:
             QMessageBox.information(self, "Threat Intelligence Analysis", "No malicious IPs or domains detected.")
-
-

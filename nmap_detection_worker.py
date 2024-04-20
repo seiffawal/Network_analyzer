@@ -13,7 +13,7 @@ class NmapDetectionWorker(QObject):
 
         def nmap_worker():
             logging.info("Starting Nmap fingerprint detection...")
-            nmap_os_db_file = r"C:\Users\Toshiba\PycharmProjects\4th gui model\nmap-os-db"
+            nmap_os_db_file = r"db/nmap-os-db"
             logging.info("Loading Nmap OS database file...")
             with open(nmap_os_db_file, 'r', encoding='utf-8') as f:  # Specify UTF-8 encoding
                 nmap_os_db_content = f.read()
