@@ -86,6 +86,15 @@ class MainWindow(QMainWindow):
         self.nmap_detection_worker.moveToThread(self.nmap_detection_thread)
         self.nmap_detection_worker.resultReady.connect(self.update_box_widget)
 
+    def print_header_message(self, analysis_name):
+        # Define the number of asterisks on each side
+        asterisks_count = 30
+
+        # Create the header message with asterisks on each side and the analysis name in the middle
+        header_message = f"{'*' * asterisks_count} {analysis_name} {'*' * asterisks_count}"
+
+        # Print the header message to the box_widget
+        self.box_widget.append(header_message)
     def create_action(self, text, handler):
         action = QAction(text, self)
         action.triggered.connect(handler)
@@ -247,6 +256,9 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
             return
 
+        # Print header message
+        self.print_header_message("Email Extraction")
+
         email_results = []
 
         # Regular expression pattern to match email addresses
@@ -263,20 +275,22 @@ class MainWindow(QMainWindow):
                     # Search for email addresses in the payload
                     emails = re.findall(email_pattern, payload)
 
-                    # Print the email addresses found in the payload
+                    # Append the email addresses found in the payload to the email_results list
                     if emails:
-                        for email in emails:
-                            email_results.append(email)
+                        email_results.extend(emails)
 
             except Exception as e:
                 print(f"Error processing packet {i + 1}: {str(e)}")
 
-        # Display the email extraction results in a pop-up window
+        # Display the email extraction results in the box_widget
         if email_results:
-            email_text = "\n".join(email_results)
-            QMessageBox.information(self, "Email Addresses Found", email_text)
+            self.box_widget.append("\nEmail Addresses Found:")
+            for email in email_results:
+                self.box_widget.append(email)
         else:
-            QMessageBox.information(self, "No Email Addresses Found", "No email addresses found in the captured packets.")
+            # Show a QMessageBox if no email addresses are found
+            QMessageBox.information(self, "No Email Addresses Found",
+                                    "No email addresses found in the captured packets.")
 
     def os_detection_action(self):
         if not self.packets:
@@ -285,6 +299,10 @@ class MainWindow(QMainWindow):
 
         reply = QMessageBox.question(self, "Save Log?", "Do you want to save the log?",
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+        # Print header message
+        self.print_header_message("OS Detection")
+
         if reply == QMessageBox.Yes:
             options = QFileDialog.Options()
             file_path, _ = QFileDialog.getSaveFileName(self, "Save Log File", "", "Text Files (*.txt)", options=options)
@@ -297,6 +315,9 @@ class MainWindow(QMainWindow):
         if not self.packets:
             QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
             return
+
+        # Print header message
+        self.print_header_message("Fuzzy Detection")
 
         # Get the HTTP traffic from the loaded packets
         http_traffic = [pkt for pkt in self.packets if pkt.haslayer(HTTPRequest)]
@@ -320,6 +341,9 @@ class MainWindow(QMainWindow):
         if not self.packets:
             QMessageBox.warning(self, "No Patterns File Selected", "Please select a patterns file.")
             return
+
+        # Print header message
+        self.print_header_message("Threat Intelligence")
 
         # Create a progress dialog
         progress_dialog = QProgressDialog("Threat Intelligence is running, please wait...", "Cancel", 0, 0, self)
