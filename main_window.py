@@ -1,6 +1,8 @@
 from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox, QFileDialog, QTableWidget, QTableWidgetItem, QTextEdit, QWidget, QVBoxLayout, QPushButton
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from scapy.all import *
+
+from API_request import is_private_ip
 from packet_capture_thread import PacketCaptureThread
 from pcap_worker import PcapWorker
 from nmap_detection_worker import NmapDetectionWorker
