@@ -308,6 +308,10 @@ class MainWindow(QMainWindow):
         malicious_ips = set()
         malicious_domains = set()
 
+        # Track checked IPs and domains
+        checked_ips = set()
+        checked_domains = set()
+
         # Track indices for coloring rows in the table widget
         malicious_ip_indices = []
         malicious_domain_indices = []
@@ -324,37 +328,41 @@ class MainWindow(QMainWindow):
                 dst_ip = packet[IP].dst
 
                 # Check source IP
-                if not is_private_ip(src_ip):
+                if not is_private_ip(src_ip) and src_ip not in checked_ips:
                     self.box_widget.append(f"Checking VirusTotal for source IP: {src_ip}")
                     src_result = check_ip(ip=src_ip)
                     if src_result and src_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
                         self.box_widget.append(f"Malicious IP Detected: {src_ip}")
                         malicious_ips.add(src_ip)
                         malicious_ip_indices.append(i)
+                    checked_ips.add(src_ip)
 
                 # Check destination IP
-                if not is_private_ip(dst_ip):
+                if not is_private_ip(dst_ip) and dst_ip not in checked_ips:
                     self.box_widget.append(f"Checking VirusTotal for destination IP: {dst_ip}")
                     dst_result = check_ip(ip=dst_ip)
                     if dst_result and dst_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
                         self.box_widget.append(f"Malicious IP Detected: {dst_ip}")
                         malicious_ips.add(dst_ip)
                         malicious_ip_indices.append(i)
+                    checked_ips.add(dst_ip)
 
             # Handle DNS packets
             if DNS in packet:
-                # Extract domain and check with VirusTotal
+                # Extract domain and check with VirusTotal if not already checked
                 domain = packet[DNSQR].qname.decode('utf-8')
                 self.box_widget.append(f"Domain: {domain}")
 
-                domain_result = check_domains(domain=domain)
-                if domain_result:
-                    if domain_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
-                        self.box_widget.append(f"Suspicious/Malicious Domain Detected: {domain}")
-                        malicious_domains.add(domain)
-                        malicious_domain_indices.append(i)
-                    else:
-                        self.box_widget.append(f"Non-malicious Domain: {domain}")
+                if domain not in checked_domains:
+                    domain_result = check_domains(domain=domain)
+                    if domain_result:
+                        if domain_result['data']['attributes']['last_analysis_stats']['malicious'] > 0:
+                            self.box_widget.append(f"Suspicious/Malicious Domain Detected: {domain}")
+                            malicious_domains.add(domain)
+                            malicious_domain_indices.append(i)
+                        else:
+                            self.box_widget.append(f"Non-malicious Domain: {domain}")
+                    checked_domains.add(domain)
 
             # Update progress dialog
             progress_dialog.setValue(i + 1)  # Update progress bar position
