@@ -14,19 +14,39 @@ from concurrent.futures import ThreadPoolExecutor
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QTableWidget, QVBoxLayout, \
     QWidget, QHBoxLayout, QTextEdit, QAction, QHeaderView, QMessageBox, QDialog, QFormLayout, QLineEdit, QPushButton, QProgressDialog
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QPixmap, QPalette, QBrush, QTransform
 from scapy.all import *
 from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import TCP, IP
 from scapy.layers.inet6 import IPv6
 from API_request import *
+from port_scanning import *
+from DDOS_detection import *
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("PCAP Analyzer")
+        self.setWindowTitle("Network Traffic Analyzer")
         self.setGeometry(100, 100, 800, 600)
         self.dark_mode = False
+
+        # Load the image file
+        self.image_path = "uhd-6686654.jpg"  # Replace with the path to your image file
+
+        # # Create a QPixmap from the image file
+        # pixmap = QPixmap(image_path)
+        #
+        # # Convert QPixmap to QBrush
+        # brush = QBrush(pixmap)
+        #
+        # # Create a palette and set the background brush to the pixmap
+        # palette = self.palette()
+        # palette.setBrush(QPalette.Window, brush)
+        #
+        # # Set the palette to the main window
+        # self.setPalette(palette)
+
+        self.set_background_image()
 
         file_menu = self.menuBar().addMenu("&File")
         edit_menu = self.menuBar().addMenu("&Edit")
@@ -61,6 +81,13 @@ class MainWindow(QMainWindow):
         threat_intel_action = self.create_action("Threat Intelligence", self.threat_intelligence_action)
         analyze_menu.addAction(threat_intel_action)
 
+        ddos_detection_action = self.create_action("DDOS Detection", self.ddos_detection_action)
+        analyze_menu.addAction(ddos_detection_action)
+
+        analyze_menu.addAction(self.create_action("Port Scan", self.port_scan_action))
+
+
+
         main_widget = QWidget()
         main_layout = QVBoxLayout()
         main_widget.setLayout(main_layout)
@@ -68,10 +95,13 @@ class MainWindow(QMainWindow):
 
         self.tableWidget = QTableWidget()
         main_layout.addWidget(self.tableWidget)
+        self.tableWidget.setStyleSheet("QTableWidget { background: rgba(255, 255, 255, 0); }")  # Transparent
 
         self.box_widget = QTextEdit()
         main_layout.addWidget(self.box_widget)
         self.box_widget.setReadOnly(True)
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 0); }")  # Transparent
+
 
         self.packets = []
         self.capturing = False
@@ -85,6 +115,22 @@ class MainWindow(QMainWindow):
         self.nmap_detection_worker = NmapDetectionWorker()
         self.nmap_detection_worker.moveToThread(self.nmap_detection_thread)
         self.nmap_detection_worker.resultReady.connect(self.update_box_widget)
+
+    def set_background_image(self):
+        """Sets the background image of the main window."""
+        # Create a QPixmap from the image file
+        pixmap = QPixmap(self.image_path)
+
+        # Resize the pixmap to the window size
+        pixmap = pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+
+        # Create a QBrush with the pixmap
+        brush = QBrush(pixmap)
+
+        # Set the brush as the background of the window
+        palette = self.palette()
+        palette.setBrush(QPalette.Window, brush)
+        self.setPalette(palette)
 
     def print_header_message(self, analysis_name):
         # Define the number of asterisks on each side
@@ -134,6 +180,8 @@ class MainWindow(QMainWindow):
             if executor.submit(worker.load_packets).result():
                 self.packets = worker.packets
                 self.display_packet_data()
+                # Set table widget to full visibility when PCAP is loaded
+                self.tableWidget.setStyleSheet("QTableWidget { background: rgba(255, 255, 255, 1.0); }")
 
     def display_packet_data(self):
         self.tableWidget.clear()
@@ -256,6 +304,9 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
             return
 
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
+
         # Print header message
         self.print_header_message("Email Extraction")
 
@@ -300,6 +351,9 @@ class MainWindow(QMainWindow):
         reply = QMessageBox.question(self, "Save Log?", "Do you want to save the log?",
                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
+
         # Print header message
         self.print_header_message("OS Detection")
 
@@ -315,6 +369,9 @@ class MainWindow(QMainWindow):
         if not self.packets:
             QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
             return
+
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
 
         # Print header message
         self.print_header_message("Fuzzy Detection")
@@ -341,6 +398,9 @@ class MainWindow(QMainWindow):
         if not self.packets:
             QMessageBox.warning(self, "No Patterns File Selected", "Please select a patterns file.")
             return
+
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
 
         # Print header message
         self.print_header_message("Threat Intelligence")
@@ -431,3 +491,53 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Threat Intelligence Analysis", result_text)
         else:
             QMessageBox.information(self, "Threat Intelligence Analysis", "No malicious IPs or domains detected.")
+
+    def port_scan_action(self):
+        # Check if there are packets loaded
+        if not self.packets:
+            QMessageBox.warning(self, "No PCAP Loaded", "Please load a PCAP file first.")
+            return
+
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
+
+        self.print_header_message("Port Scan")
+
+        # Display header for Port Scan Analysis
+        self.box_widget.append("\nPort Scan Analysis")
+
+        # Call the detect_port_scan function and pass self.box_widget.append as the display function
+        self.box_widget.append("\nBasic Port Scan Detection:")
+        detect_port_scan(self.packets, self.box_widget.append)
+
+        # Call the detect_port_scan2 function and pass self.box_widget.append as the display function
+        self.box_widget.append("\nAdvanced Port Scan Detection:")
+        detect_port_scan2(self.packets, self.box_widget.append)
+
+    def ddos_detection_action(self):
+        # Check if there are packets loaded
+        if not self.packets:
+            QMessageBox.warning(self, "No PCAP Loaded", "Please load a PCAP file first.")
+            return
+
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
+
+        # Print header message
+        self.print_header_message("DDOS Detection")
+
+        try:
+            # Call the DDOS detection function with the loaded packets
+            results = process_pcap(self.packets)  # Pass self.packets to process_pcap
+
+            # Display the results in the box widget
+            if results:
+                for result in results:
+                    self.box_widget.append(result)
+            else:
+                self.box_widget.append("No DDOS attacks detected in the loaded PCAP.")
+
+        except Exception as e:
+            QMessageBox.warning(self, "DDOS Detection Error", f"An error occurred during DDOS detection: {str(e)}")
+
+
