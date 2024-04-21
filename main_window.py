@@ -407,6 +407,7 @@ class MainWindow(QMainWindow):
 
         # Create a progress dialog
         progress_dialog = QProgressDialog("Threat Intelligence is running, please wait...", "Cancel", 0, 0, self)
+        progress_dialog.setWindowTitle("Loading")
         progress_dialog.setWindowModality(Qt.WindowModal)
         progress_dialog.show()
 
