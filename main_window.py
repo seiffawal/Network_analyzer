@@ -22,6 +22,7 @@ from scapy.layers.inet6 import IPv6
 from API_request import *
 from port_scanning import *
 from DDOS_detection import *
+from injections import *
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -85,6 +86,9 @@ class MainWindow(QMainWindow):
         analyze_menu.addAction(ddos_detection_action)
 
         analyze_menu.addAction(self.create_action("Port Scan", self.port_scan_action))
+
+        sql_injection_action = self.create_action("SQL Injection", self.sql_injection_action)
+        analyze_menu.addAction(sql_injection_action)
 
 
 
@@ -540,5 +544,42 @@ class MainWindow(QMainWindow):
 
         except Exception as e:
             QMessageBox.warning(self, "DDOS Detection Error", f"An error occurred during DDOS detection: {str(e)}")
+
+    def sql_injection_action(self):
+        if not self.packets:
+            QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
+            return
+
+        # Set box_widget to full visibility when an analysis action is used
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
+
+        # Print header message
+        self.print_header_message("SQL Injection Detection")
+
+        # Extract payloads from the packets
+        payloads = [pkt[Raw].load for pkt in self.packets if Raw in pkt]
+
+        # Detect SQL injections in the extracted payloads
+        detected_injections = detect_sql_injection(payloads)
+
+        # Detect XSS attacks in the extracted payloads
+        detected_xss_attacks = detect_xss(payloads)
+
+        # Display detected SQL injections
+        if detected_injections:
+            self.box_widget.append("Detected SQL Injections:")
+            for idx, payload in detected_injections:
+                self.box_widget.append(f"Payload {idx}: {payload}")
+        else:
+            self.box_widget.append("No SQL Injections detected.")
+
+        # Display detected XSS attacks
+        if detected_xss_attacks:
+            self.box_widget.append("\nDetected XSS Attacks:")
+            for idx, payload in detected_xss_attacks:
+                self.box_widget.append(f"Payload {idx}: {payload}")
+        else:
+            self.box_widget.append("\nNo XSS Attacks detected.")
+
 
 

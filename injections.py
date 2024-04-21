@@ -97,29 +97,4 @@ def detect_xss(payloads):
 
 
 
-if __name__ == "__main__":
-    # Replace 'example.pcap' with the name of your pcap file
-    pcap_file = r"C:\Users\Seif_Eldein\Desktop\xss.pcapng"
-    extracted_payloads = extract_payloads(pcap_file)
 
-    # Detect SQL injections in the extracted payloads
-    detected_injections = detect_sql_injection(extracted_payloads)
-
-    # Detect XSS attacks in the extracted payloads
-    detected_xss_attacks = detect_xss(extracted_payloads)
-
-    # Print detected SQL injections
-    if detected_injections:
-        print("Detected SQL Injections:")
-        for idx, (payload_idx, payload) in enumerate(detected_injections):
-            print(f"Payload {payload_idx}: {payload}")
-    else:
-        print("No SQL Injections detected.")
-
-    # Print detected XSS attacks
-    if detected_xss_attacks:
-        print("Detected XSS Attacks:")
-        for idx, (payload_idx, payload) in enumerate(detected_xss_attacks):
-            print(f"Payload {payload_idx}: {payload}")
-    else:
-        print("No XSS Attacks detected.")
