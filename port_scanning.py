@@ -41,75 +41,75 @@
 #     # Load the pcap file
 #     packets = rdpcap(pcap_file)
 #
-#     # Define patterns to detect
-#     patterns = [
-#         {
-#             "name": "TCP ACK Scan",
-#             "signature": {
-#                 "flags": {"A": 1}
-#             }
-#         },
-#         {
-#             "name": "TCP Christmas Scan",
-#             "signature": {
-#                 "flags": {"F": 1, "P": 1, "U": 1}
-#             }
-#         },
-#         {
-#             "name": "TCP FIN Scan",
-#             "signature": {
-#                 "flags": {"F": 1}
-#             }
-#         },
-#         {
-#             "name": "TCP SYN (Stealth) Scan",
-#             "description": "SYN scan is the default and most popular scan option for good reason. It can be performed quickly, scanning thousands of ports per second on a fast network not hampered by intrusive firewalls. SYN scan is relatively unobtrusive and stealthy, since it never completes TCP connections. It also works against any compliant TCP stack rather than depending on idiosyncrasies of specific platforms as Nmap's FIN/NULL/Xmas, Maimon and idle scans do. It also allows clear, reliable differentiation between open, closed, and filtered states.",
-#             "signature": {
-#                 "flags": {"S": 1}
-#             }
-#         },
-#         {
-#             "name": "TCP Connect() Scan",
-#             "description": "TCP Connect() scan",
-#             "signature": {
-#                 "flags": {"S": 1, "A": 1}
-#             }
-#         },
-#         {
-#             "name": "TCP Window Scan",
-#             "description": "TCP Window Scan",
-#             "signature": {
-#                 "flags": {"W": 1}
-#             }
-#         },
-#         {
-#             "name": "TCP Maimon Scan",
-#             "description": "TCP Maimon Scan",
-#             "signature": {
-#                 "flags": {"M": 1}
-#             }
-#         },
-#         {
-#             "name": "UDP Scan",
-#             "description": "UDP Scan",
-#             "signature": {
-#                 "protocol": "UDP"
-#             }
-#         },
-#         {
-#             "name": "TCP Null Scan",
-#             "description": "TCP Null Scan",
-#             "signature": {
-#                 "flags": {}
-#             }
-#         },
-#         {
-#             "name": "TCP Xmas Scan",
-#             "description": "TCP Xmas Scan",
-#             "signature": {
-#                 "flags": {"F": 1, "P": 1, "U": 1}
-#             }
-#         },
+    # # Define patterns to detect
+    # patterns = [
+    #     {
+    #         "name": "TCP ACK Scan",
+    #         "signature": {
+    #             "flags": {"A": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP Christmas Scan",
+    #         "signature": {
+    #             "flags": {"F": 1, "P": 1, "U": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP FIN Scan",
+    #         "signature": {
+    #             "flags": {"F": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP SYN (Stealth) Scan",
+    #         "description": "SYN scan is the default and most popular scan option for good reason. It can be performed quickly, scanning thousands of ports per second on a fast network not hampered by intrusive firewalls. SYN scan is relatively unobtrusive and stealthy, since it never completes TCP connections. It also works against any compliant TCP stack rather than depending on idiosyncrasies of specific platforms as Nmap's FIN/NULL/Xmas, Maimon and idle scans do. It also allows clear, reliable differentiation between open, closed, and filtered states.",
+    #         "signature": {
+    #             "flags": {"S": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP Connect() Scan",
+    #         "description": "TCP Connect() scan",
+    #         "signature": {
+    #             "flags": {"S": 1, "A": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP Window Scan",
+    #         "description": "TCP Window Scan",
+    #         "signature": {
+    #             "flags": {"W": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP Maimon Scan",
+    #         "description": "TCP Maimon Scan",
+    #         "signature": {
+    #             "flags": {"M": 1}
+    #         }
+    #     },
+    #     {
+    #         "name": "UDP Scan",
+    #         "description": "UDP Scan",
+    #         "signature": {
+    #             "protocol": "UDP"
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP Null Scan",
+    #         "description": "TCP Null Scan",
+    #         "signature": {
+    #             "flags": {}
+    #         }
+    #     },
+    #     {
+    #         "name": "TCP Xmas Scan",
+    #         "description": "TCP Xmas Scan",
+    #         "signature": {
+    #             "flags": {"F": 1, "P": 1, "U": 1}
+    #         }
+    #     },
 #         # Add more patterns as needed...
 #     ]
 #
@@ -156,12 +156,76 @@ from scapy.layers.inet import *
 
 def detect_port_scan(packets, display_function):
     # Define patterns to detect
+    # Define patterns to detect
     patterns = [
         {
             "name": "TCP ACK Scan",
-            "signature": {"flags": {"A": 1}}
+            "signature": {
+                "flags": {"A": 1}
+            }
         },
-        # Other patterns...
+        {
+            "name": "TCP Christmas Scan",
+            "signature": {
+                "flags": {"F": 1, "P": 1, "U": 1}
+            }
+        },
+        {
+            "name": "TCP FIN Scan",
+            "signature": {
+                "flags": {"F": 1}
+            }
+        },
+        {
+            "name": "TCP SYN (Stealth) Scan",
+            "description": "SYN scan is the default and most popular scan option for good reason. It can be performed quickly, scanning thousands of ports per second on a fast network not hampered by intrusive firewalls. SYN scan is relatively unobtrusive and stealthy, since it never completes TCP connections. It also works against any compliant TCP stack rather than depending on idiosyncrasies of specific platforms as Nmap's FIN/NULL/Xmas, Maimon and idle scans do. It also allows clear, reliable differentiation between open, closed, and filtered states.",
+            "signature": {
+                "flags": {"S": 1}
+            }
+        },
+        {
+            "name": "TCP Connect() Scan",
+            "description": "TCP Connect() scan",
+            "signature": {
+                "flags": {"S": 1, "A": 1}
+            }
+        },
+        {
+            "name": "TCP Window Scan",
+            "description": "TCP Window Scan",
+            "signature": {
+                "flags": {"W": 1}
+            }
+        },
+        {
+            "name": "TCP Maimon Scan",
+            "description": "TCP Maimon Scan",
+            "signature": {
+                "flags": {"M": 1}
+            }
+        },
+        {
+            "name": "UDP Scan",
+            "description": "UDP Scan",
+            "signature": {
+                "protocol": "UDP"
+            }
+        },
+        {
+            "name": "TCP Null Scan",
+            "description": "TCP Null Scan",
+            "signature": {
+                "flags": {}
+            }
+        },
+        {
+            "name": "TCP Xmas Scan",
+            "description": "TCP Xmas Scan",
+            "signature": {
+                "flags": {"F": 1, "P": 1, "U": 1}
+            }
+        },
+        # Add more patterns as needed...
     ]
 
     # Iterate through each packet in the list
