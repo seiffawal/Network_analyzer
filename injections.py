@@ -81,16 +81,27 @@ def detect_xss(payloads):
 
     # Iterate through each payload
     for idx, payload in enumerate(payloads):
+        # Convert payload from bytes to hex string for easier display
+        payload_hex = payload.hex()
+
         # Convert payload from bytes to string
-        payload_str = payload.decode('utf-8', errors='ignore')
+        try:
+            payload_str = payload.decode('utf-8', errors='ignore')
+        except UnicodeDecodeError as e:
+            # Print decoding error message to console (optional)
+            print(f"Decoding error for payload at index {idx}: {e}")
+            continue
+
         # Check for each XSS pattern
         for pattern in xss_patterns:
             # Search for XSS patterns
             if re.search(pattern, payload_str):
-                xss_attacks.append((idx + 1, payload_str))
+                # Append index and payload as hex to the list of detected XSS attacks
+                xss_attacks.append((idx + 1, payload_hex))
                 break  # Break out of the loop if any pattern is found
 
     return xss_attacks
+
 
 
 

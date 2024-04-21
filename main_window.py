@@ -59,6 +59,9 @@ class MainWindow(QMainWindow):
         load_action = self.create_action("&Load PCAP", self.load_pcap)
         file_menu.addAction(load_action)
 
+        load_pcapng_action = self.create_action("&Load PCAPNG", self.load_pcapng)
+        file_menu.addAction(load_pcapng_action)
+
         save_pcap_action = self.create_action("Save as PCAP", self.save_as_pcap)
         file_menu.addAction(save_pcap_action)
 
@@ -87,7 +90,7 @@ class MainWindow(QMainWindow):
 
         analyze_menu.addAction(self.create_action("Port Scan", self.port_scan_action))
 
-        sql_injection_action = self.create_action("SQL Injection", self.sql_injection_action)
+        sql_injection_action = self.create_action("Injection", self.sql_injection_action)
         analyze_menu.addAction(sql_injection_action)
 
 
@@ -173,7 +176,13 @@ class MainWindow(QMainWindow):
             self.display_captured_packet_data()
 
     def load_pcap(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Open PCAP File", "", "PCAP Files (*.pcap)")
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open PCAP File", "", "PCAP Files (*.pcap *.pcapng)")  # Adjusted filter
+        if file_path:
+            self.clear_box_widget()  # Clear the box widget
+            self.load_packets(file_path)
+
+    def load_pcapng(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Open PCAPNG File", "", "PCAPNG Files (*.pcapng)")  # Filter for pcapng files
         if file_path:
             self.clear_box_widget()  # Clear the box widget
             self.load_packets(file_path)
@@ -546,15 +555,16 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "DDOS Detection Error", f"An error occurred during DDOS detection: {str(e)}")
 
     def sql_injection_action(self):
+        # Check if there are packets loaded
         if not self.packets:
-            QMessageBox.warning(self, "No PCAP Loaded", "Load a PCAP file first.")
+            QMessageBox.warning(self, "No PCAP Loaded", "Please load a PCAP file first.")
             return
 
         # Set box_widget to full visibility when an analysis action is used
         self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
 
         # Print header message
-        self.print_header_message("SQL Injection Detection")
+        self.print_header_message("Injection Detection")
 
         # Extract payloads from the packets
         payloads = [pkt[Raw].load for pkt in self.packets if Raw in pkt]
@@ -565,21 +575,23 @@ class MainWindow(QMainWindow):
         # Detect XSS attacks in the extracted payloads
         detected_xss_attacks = detect_xss(payloads)
 
-        # Display detected SQL injections
+        # Display detected SQL injections in the box_widget
         if detected_injections:
-            self.box_widget.append("Detected SQL Injections:")
-            for idx, payload in detected_injections:
-                self.box_widget.append(f"Payload {idx}: {payload}")
+            self.box_widget.append("\nDetected SQL Injections:")
+            for idx, payload_str in detected_injections:
+                self.box_widget.append(f"Payload {idx}: {payload_str}")
         else:
-            self.box_widget.append("No SQL Injections detected.")
+            self.box_widget.append("\nNo SQL Injections detected.")
 
-        # Display detected XSS attacks
+        # Display detected XSS attacks in the box_widget
         if detected_xss_attacks:
             self.box_widget.append("\nDetected XSS Attacks:")
-            for idx, payload in detected_xss_attacks:
-                self.box_widget.append(f"Payload {idx}: {payload}")
+            for idx, payload_hex in detected_xss_attacks:
+                self.box_widget.append(f"Payload {idx}: {payload_hex}")
         else:
             self.box_widget.append("\nNo XSS Attacks detected.")
+
+
 
 
 
