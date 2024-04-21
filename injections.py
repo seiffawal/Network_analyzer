@@ -60,47 +60,42 @@ def detect_sql_injection(payloads):
                 break  # Break out of the loop if any pattern is found
 
     return sql_injections
-def detect_xss(payloads):
-    xss_attacks = []
 
-    # Regular expression patterns for XSS detection
-    xss_patterns = [
-        r"<script>",
-        r"</script>",
-        r"<img src=",
-        r"onmouseover=",
-        r"onerror=",
-        r"alert\(",
-        r"document.cookie",
-        r"document.location",
-        r"window.location",
-        r"eval\(",
-        r"setTimeout\(",
-        r"setInterval\("
-    ]
 
-    # Iterate through each payload
-    for idx, payload in enumerate(payloads):
-        # Convert payload from bytes to hex string for easier display
-        payload_hex = payload.hex()
+# def detect_xss(payloads):
+#     xss_attacks = []
+#
+#     # Regular expression patterns for XSS detection
+#     xss_patterns = [
+#         r"<script>",
+#         r"</script>",
+#         r"<img src=",
+#         r"onmouseover=",
+#         r"onerror=",
+#         r"alert\(",
+#         r"document.cookie",
+#         r"document.location",
+#         r"window.location",
+#         r"eval\(",
+#         r"setTimeout\(",
+#         r"setInterval\("
+#     ]
+#
+#     # Iterate through each payload
+#     for idx, payload in enumerate(payloads):
+#         # Convert payload from bytes to string
+#         payload_str = payload.decode('utf-8', errors='ignore')
+#         # Check for each XSS pattern
+#         for pattern in xss_patterns:
+#             # Search for XSS patterns
+#             if re.search(pattern, payload_str):
+#                 # Append the index and the payload as a plain string
+#                 xss_attacks.append((idx + 1, payload_str))
+#                 break  # Break out of the loop if any pattern is found
+#
+#     return xss_attacks
 
-        # Convert payload from bytes to string
-        try:
-            payload_str = payload.decode('utf-8', errors='ignore')
-        except UnicodeDecodeError as e:
-            # Print decoding error message to console (optional)
-            print(f"Decoding error for payload at index {idx}: {e}")
-            continue
 
-        # Check for each XSS pattern
-        for pattern in xss_patterns:
-            # Search for XSS patterns
-            if re.search(pattern, payload_str):
-                # Append index and payload as hex to the list of detected XSS attacks
-                xss_attacks.append((idx + 1, payload_hex))
-                break  # Break out of the loop if any pattern is found
-
-    return xss_attacks
 
 
 

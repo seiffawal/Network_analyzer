@@ -573,7 +573,7 @@ class MainWindow(QMainWindow):
         detected_injections = detect_sql_injection(payloads)
 
         # Detect XSS attacks in the extracted payloads
-        detected_xss_attacks = detect_xss(payloads)
+        #detected_xss_attacks = detect_xss(payloads)
 
         # Display detected SQL injections in the box_widget
         if detected_injections:
@@ -584,12 +584,13 @@ class MainWindow(QMainWindow):
             self.box_widget.append("\nNo SQL Injections detected.")
 
         # Display detected XSS attacks in the box_widget
-        if detected_xss_attacks:
-            self.box_widget.append("\nDetected XSS Attacks:")
-            for idx, payload_hex in detected_xss_attacks:
-                self.box_widget.append(f"Payload {idx}: {payload_hex}")
-        else:
-            self.box_widget.append("\nNo XSS Attacks detected.")
+        # if detected_xss_attacks:
+        #     self.box_widget.append("\nDetected XSS Attacks:")
+        #     for idx, payload_str in detected_xss_attacks:
+        #         self.box_widget.append(f"Payload {idx}: {payload_str}")
+        # else:
+        #     self.box_widget.append("\nNo XSS Attacks detected.")
+
 
 
 
