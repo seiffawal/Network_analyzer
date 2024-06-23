@@ -573,7 +573,7 @@ class MainWindow(QMainWindow):
         detected_injections = detect_sql_injection(payloads)
 
         # Detect XSS attacks in the extracted payloads
-        #detected_xss_attacks = detect_xss(payloads)
+        detected_xss_attacks = detect_xss(payloads)
 
         # Display detected SQL injections in the box_widget
         if detected_injections:
@@ -584,12 +584,23 @@ class MainWindow(QMainWindow):
             self.box_widget.append("\nNo SQL Injections detected.")
 
         # Display detected XSS attacks in the box_widget
-        # if detected_xss_attacks:
-        #     self.box_widget.append("\nDetected XSS Attacks:")
-        #     for idx, payload_str in detected_xss_attacks:
-        #         self.box_widget.append(f"Payload {idx}: {payload_str}")
-        # else:
-        #     self.box_widget.append("\nNo XSS Attacks detected.")
+        if detected_xss_attacks:
+            self.box_widget.append("\nDetected XSS Attacks:")
+            for idx, (packet_num, payload_str) in enumerate(detected_xss_attacks, start=1):
+                # Escape HTML characters in payload_str
+                payload_str_escaped = self.escape_html(payload_str)
+                self.box_widget.append(f"Packet #{packet_num}: {payload_str_escaped}")
+        else:
+            self.box_widget.append("\nNo XSS Attacks detected.")
+
+    def escape_html(self, text):
+        """Escape HTML special characters in text."""
+        text = text.replace("&", "&amp;")
+        text = text.replace("<", "&lt;")
+        text = text.replace(">", "&gt;")
+        text = text.replace('"', "&quot;")
+        text = text.replace("'", "&#39;")
+        return text
 
 
 
