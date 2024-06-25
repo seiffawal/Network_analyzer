@@ -87,6 +87,7 @@ class MainWindow(QMainWindow):
         main_widget.setLayout(main_layout)
         self.setCentralWidget(main_widget)
 
+
         self.tableWidget = QTableWidget()
         main_layout.addWidget(self.tableWidget)
         self.tableWidget.setStyleSheet("QTableWidget { background: rgba(255, 255, 255, 0); }")  # Transparent
