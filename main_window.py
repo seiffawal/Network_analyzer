@@ -29,7 +29,7 @@ from injections import *
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Colasoft Capsa-Like Network Traffic Analyzer")
+        self.setWindowTitle("Network Traffic Analyzer")
         self.setGeometry(100, 100, 1200, 800)
         self.dark_mode = False
 
