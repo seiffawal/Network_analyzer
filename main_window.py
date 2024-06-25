@@ -34,7 +34,7 @@ class MainWindow(QMainWindow):
         self.dark_mode = False
 
         # Load the image file
-        self.image_path = "uhd-6686654.jpg"  # Replace with the path to your image file
+        self.image_path = "uhd-6686654.jpg"
 
         self.set_background_image()
 
