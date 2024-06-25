@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox, QFileDialog, QTableWidget, QTableWidgetItem, QTextEdit, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox, QFileDialog, QTableWidget, QTableWidgetItem, QTextEdit, \
+    QWidget, QVBoxLayout, QPushButton, QGroupBox
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from scapy.all import *
 
@@ -14,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QTableWidget, QVBoxLayout, \
     QWidget, QHBoxLayout, QTextEdit, QAction, QHeaderView, QMessageBox, QDialog, QFormLayout, QLineEdit, QPushButton, QProgressDialog
-from PyQt5.QtGui import QColor, QPixmap, QPalette, QBrush, QTransform
+from PyQt5.QtGui import QColor, QPixmap, QPalette, QBrush, QTransform, QPainter
 from scapy.all import *
 from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import TCP, IP
@@ -24,28 +25,16 @@ from port_scanning import *
 from DDOS_detection import *
 from injections import *
 
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Network Traffic Analyzer")
-        self.setGeometry(100, 100, 800, 600)
+        self.setWindowTitle("Colasoft Capsa-Like Network Traffic Analyzer")
+        self.setGeometry(100, 100, 1200, 800)
         self.dark_mode = False
 
         # Load the image file
         self.image_path = "uhd-6686654.jpg"  # Replace with the path to your image file
-
-        # # Create a QPixmap from the image file
-        # pixmap = QPixmap(image_path)
-        #
-        # # Convert QPixmap to QBrush
-        # brush = QBrush(pixmap)
-        #
-        # # Create a palette and set the background brush to the pixmap
-        # palette = self.palette()
-        # palette.setBrush(QPalette.Window, brush)
-        #
-        # # Set the palette to the main window
-        # self.setPalette(palette)
 
         self.set_background_image()
 
@@ -93,8 +82,6 @@ class MainWindow(QMainWindow):
         sql_injection_action = self.create_action("Injection", self.sql_injection_action)
         analyze_menu.addAction(sql_injection_action)
 
-
-
         main_widget = QWidget()
         main_layout = QVBoxLayout()
         main_widget.setLayout(main_layout)
@@ -104,11 +91,16 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.tableWidget)
         self.tableWidget.setStyleSheet("QTableWidget { background: rgba(255, 255, 255, 0); }")  # Transparent
 
+        # Create a group box for packet details
+        self.packet_details_group = QGroupBox("Packet Details")
+        packet_details_layout = QVBoxLayout()
+        self.packet_details_group.setLayout(packet_details_layout)
+        main_layout.addWidget(self.packet_details_group)
+
         self.box_widget = QTextEdit()
-        main_layout.addWidget(self.box_widget)
+        packet_details_layout.addWidget(self.box_widget)
         self.box_widget.setReadOnly(True)
         self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 0); }")  # Transparent
-
 
         self.packets = []
         self.capturing = False
@@ -123,16 +115,34 @@ class MainWindow(QMainWindow):
         self.nmap_detection_worker.moveToThread(self.nmap_detection_thread)
         self.nmap_detection_worker.resultReady.connect(self.update_box_widget)
 
+
+    def resizeEvent(self, event):
+        self.set_background_image()
+        super().resizeEvent(event)
+
     def set_background_image(self):
         """Sets the background image of the main window."""
         # Create a QPixmap from the image file
         pixmap = QPixmap(self.image_path)
 
-        # Resize the pixmap to the window size
-        pixmap = pixmap.scaled(self.size(), Qt.IgnoreAspectRatio, Qt.SmoothTransformation)
+        # Resize the pixmap to fit the window size while keeping the aspect ratio
+        pixmap = pixmap.scaled(self.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
-        # Create a QBrush with the pixmap
-        brush = QBrush(pixmap)
+        # Calculate the position to center the image
+        x_offset = (self.width() - pixmap.width()) / 2
+        y_offset = (self.height() - pixmap.height()) / 2
+
+        # Create a QPixmap with the same size as the window, filled with transparent color
+        centered_pixmap = QPixmap(self.size())
+        centered_pixmap.fill(Qt.transparent)
+
+        # Draw the original pixmap onto the centered_pixmap at the calculated position
+        painter = QPainter(centered_pixmap)
+        painter.drawPixmap(x_offset, y_offset, pixmap)
+        painter.end()
+
+        # Create a QBrush with the centered_pixmap
+        brush = QBrush(centered_pixmap)
 
         # Set the brush as the background of the window
         palette = self.palette()
@@ -148,6 +158,7 @@ class MainWindow(QMainWindow):
 
         # Print the header message to the box_widget
         self.box_widget.append(header_message)
+
     def create_action(self, text, handler):
         action = QAction(text, self)
         action.triggered.connect(handler)
