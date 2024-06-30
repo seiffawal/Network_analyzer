@@ -1,25 +1,13 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, QMessageBox, QFileDialog, QTableWidget, QTableWidgetItem, QTextEdit, \
-    QWidget, QVBoxLayout, QPushButton, QGroupBox
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
-from scapy.all import *
-
-from API_request import is_private_ip
 from packet_capture_thread import PacketCaptureThread
 from pcap_worker import PcapWorker
 from nmap_detection_worker import NmapDetectionWorker
 from utils import extract_packet_info, detect_directory_fuzzing, read_fuzzing_patterns
-import sys
-import re
-import logging
 from concurrent.futures import ThreadPoolExecutor
-from PyQt5.QtCore import QThread, pyqtSignal, Qt, QObject
+from PyQt5.QtCore import QThread, Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTableWidgetItem, QTableWidget, QVBoxLayout, \
-    QWidget, QHBoxLayout, QTextEdit, QAction, QHeaderView, QMessageBox, QDialog, QFormLayout, QLineEdit, QPushButton, QProgressDialog
-from PyQt5.QtGui import QColor, QPixmap, QPalette, QBrush, QTransform, QPainter
-from scapy.all import *
+    QWidget, QTextEdit, QAction, QMessageBox, QProgressDialog, QGroupBox
+from PyQt5.QtGui import QColor, QPixmap, QPalette, QBrush, QPainter
 from scapy.layers.http import HTTPRequest
-from scapy.layers.inet import TCP, IP
-from scapy.layers.inet6 import IPv6
 from API_request import *
 from port_scanning import *
 from DDOS_detection import *
@@ -30,7 +18,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Network Traffic Analyzer")
-        self.setGeometry(100, 100, 1200, 800)
+        self.setGeometry(100, 100, 800, 400)
         self.dark_mode = False
 
         # Load the image file
@@ -90,10 +78,44 @@ class MainWindow(QMainWindow):
 
         self.tableWidget = QTableWidget()
         main_layout.addWidget(self.tableWidget)
-        self.tableWidget.setStyleSheet("QTableWidget { background: rgba(255, 255, 255, 0); }")  # Transparent
+        self.tableWidget.setStyleSheet("""
+            QTableWidget {
+                background-color: #ffffff;
+                alternate-background-color: #f0f0f0;
+                gridline-color: #d5d5d5;
+                selection-background-color: #0078d7;
+                selection-color: #ffffff;
+            }
+
+            QHeaderView::section {
+                background-color: #0078d7;
+                color: #ffffff;
+                padding: 4px;
+                border: none;
+            }
+
+            QHeaderView::section:checked {
+                background-color: #003b73;
+            }
+
+            QTableWidget::item {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+
+            QTableWidget::item:selected {
+                background-color: #0078d7;
+                color: #ffffff;
+            }
+
+            QTableWidget::item:hover {
+                background-color: #d0e4f5;
+            }
+        """)
 
         # Create a group box for packet details
         self.packet_details_group = QGroupBox("Packet Details")
+        self.packet_details_group.setStyleSheet("QGroupBox { color: white; }")
         packet_details_layout = QVBoxLayout()
         self.packet_details_group.setLayout(packet_details_layout)
         main_layout.addWidget(self.packet_details_group)
@@ -101,7 +123,7 @@ class MainWindow(QMainWindow):
         self.box_widget = QTextEdit()
         packet_details_layout.addWidget(self.box_widget)
         self.box_widget.setReadOnly(True)
-        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 0); }")  # Transparent
+        self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 0); }")
 
         self.packets = []
         self.capturing = False
@@ -115,6 +137,12 @@ class MainWindow(QMainWindow):
         self.nmap_detection_worker = NmapDetectionWorker()
         self.nmap_detection_worker.moveToThread(self.nmap_detection_thread)
         self.nmap_detection_worker.resultReady.connect(self.update_box_widget)
+
+        # Create Full Analyze action
+        full_analyze_action = self.create_action("Full Analyze", self.full_analyze_action)
+        analyze_menu.addAction(full_analyze_action)
+
+
 
 
     def resizeEvent(self, event):
@@ -572,6 +600,7 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "No PCAP Loaded", "Please load a PCAP file first.")
             return
 
+
         # Set box_widget to full visibility when an analysis action is used
         self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
 
@@ -605,6 +634,7 @@ class MainWindow(QMainWindow):
         else:
             self.box_widget.append("\nNo XSS Attacks detected.")
 
+
     def escape_html(self, text):
         """Escape HTML special characters in text."""
         text = text.replace("&", "&amp;")
@@ -614,6 +644,51 @@ class MainWindow(QMainWindow):
         text = text.replace("'", "&#39;")
         return text
 
+    def full_analyze_action(self):
+        if not self.packets:
+            QMessageBox.warning(self, "No PCAP Loaded", "Please load a PCAP file first.")
+            return
+
+        try:
+            # Clear box widget before displaying results
+            self.clear_box_widget()
+
+            # Set box_widget to full visibility when Full Analyze action is used
+            self.box_widget.setStyleSheet("QTextEdit { background: rgba(255, 255, 255, 1.0); }")
+
+            # Print header message for Full Analyze
+            self.print_header_message("Full Analysis")
+
+            # Perform each analysis function and display results sequentially
+            self.extract_emails_action()
+
+
+            # Directly integrate OS detection functionality here
+            if self.packets:
+                reply = QMessageBox.question(self, "Save Log?", "Do you want to save the log?",
+                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+                if reply == QMessageBox.Yes:
+                    options = QFileDialog.Options()
+                    file_path, _ = QFileDialog.getSaveFileName(self, "Save Log File", "", "Text Files (*.txt)",
+                                                               options=options)
+                    if file_path:
+                        self.nmap_detection_worker.detect_nmap_fingerprinting(self.packets, file_path)
+                else:
+                    self.nmap_detection_worker.detect_nmap_fingerprinting(self.packets, None)
+
+            self.threat_intelligence_action()
+            self.port_scan_action()
+            self.sql_injection_action()
+            self.ddos_detection_action()
+
+
+            # Show message box indicating full analysis completed
+            QMessageBox.information(self, "Full Analysis",
+                                    "Full analysis completed. Check the output in the details box.")
+
+        except Exception as e:
+            QMessageBox.warning(self, "Full Analyze Error", f"An error occurred during full analysis: {str(e)}")
 
 
 
