@@ -3,6 +3,7 @@ import re
 from scapy.layers.http import HTTPRequest
 from scapy.layers.inet import *
 from scapy.layers.inet6 import IPv6
+from datetime import datetime
 
 protocol_names = {
     1: 'ICMP',
@@ -10,11 +11,16 @@ protocol_names = {
     17: 'UDP',
 }
 
+def convert_timestamp(ts):
+    # Convert Scapy's EDecimal to float explicitly
+    ts_float = float(ts)
+    return datetime.fromtimestamp(ts_float).strftime('%d/%m/%Y %H:%M:%S')
+
 def extract_packet_info(packet):
     packet_info = {}
     try:
         if IP in packet:
-            packet_info['time'] = packet.time
+            packet_info['time'] = convert_timestamp(packet.time)
             packet_info['source_ip'] = packet[IP].src
             packet_info['destination_ip'] = packet[IP].dst
             packet_info['protocol_number'] = packet[IP].proto
